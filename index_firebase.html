@@ -1,0 +1,2795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Salvation Army Kimaswa School - Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#DC2626',
+                        secondary: '#1E40AF'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { font-size: 12px; }
+        }
+        .print-only { display: none; }
+        
+        /* Dark mode support */
+        .dark {
+            background-color: #181818;
+            color: #ffffff;
+        }
+        .dark .bg-white { background-color: #2d2d2d; }
+        .dark .bg-gray-50 { background-color: #1f1f1f; }
+        .dark .bg-gray-100 { background-color: #2d2d2d; }
+        .dark .text-gray-900 { color: #ffffff; }
+        .dark .text-gray-700 { color: #d1d5db; }
+        .dark .text-gray-600 { color: #9ca3af; }
+        .dark .border-gray-300 { border-color: #4b5563; }
+        .dark .border-gray-200 { border-color: #374151; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- School Logo (will be used throughout) -->
+    <div id="schoolLogo" class="hidden">
+        <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-20 h-20 object-contain mx-auto">
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-white dark:bg-gray-800 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="schoolLogo mb-4">
+                <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-32 h-32 object-contain mx-auto">
+            </div>
+            <h1 class="text-2xl font-bold text-primary mb-2">The Salvation Army Kimaswa School</h1>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">Management System</p>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading system...</p>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-secondary">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="schoolLogo mb-4">
+                    <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-20 h-20 object-contain mx-auto">
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">School Management System</h1>
+                <p class="text-gray-600 dark:text-gray-300">The Salvation Army Kimaswa School</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User Type</label>
+                    <select id="userType" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                        <option value="admin">Administrator</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="parent">Parent</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username/Email</label>
+                    <input type="text" id="username" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                    <input type="password" id="password" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-200">
+                    Login
+                </button>
+                <div class="text-center">
+                    <a href="#" id="resetPasswordLink" class="text-sm text-primary hover:underline">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Navigation -->
+        <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-primary">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="schoolLogo mr-3">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-10 h-10 object-contain">
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-bold text-gray-900 dark:text-white">SAKS Management System</h1>
+                            <p class="text-xs text-gray-600 dark:text-gray-300">Strive to Succeed</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span id="currentUser" class="text-sm text-gray-700 dark:text-gray-300"></span>
+                        <button id="logoutBtn" class="bg-primary text-white px-3 py-1 rounded text-sm hover:bg-red-700">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white dark:bg-gray-800 shadow-lg min-h-screen">
+                <div id="sidebarMenu" class="p-4"></div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 p-6">
+                <div id="contentArea">
+                    <!-- Dashboard will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div id="resetModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Reset Password</h3>
+            <form id="resetForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                    <input type="email" id="resetEmail" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelReset" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded hover:bg-red-700">Send Reset Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // School Configuration
+        const SCHOOL_CONFIG = {
+            name: "THE SALVATION ARMY KIMASWA SCHOOL",
+            address: "P.O. BOX 131-50201, CHEPTAIS",
+            motto: "STRIVE TO SUCCEED",
+            grades: ["7N", "7S", "8N", "9N", "9S"],
+            learningAreas: {
+                "901": "ENGLISH",
+                "902": "KISWAHILI", 
+                "903": "MATHEMATICS",
+                "905": "INTEGRATED SCIENCE",
+                "906": "AGRICULTURE AND NUTRITION",
+                "907": "SOCIAL STUDIES",
+                "908": "CHRISTIAN RELIGIOUS",
+                "911": "CREATIVE ARTS AND SPORTS",
+                "912": "PRE-TECHNICAL STUDIES"
+            },
+            terms: ["Term 1", "Term 2", "Term 3"],
+            examTypes: ["Midterm", "Endterm"],
+            academicYears: Array.from({length: 27}, (_, i) => 2024 + i),
+            performanceLevels: {
+                "EE": { min: 75, max: 100, name: "EXCEEDING EXPECTATIONS" },
+                "ME": { min: 50, max: 74, name: "MEETING EXPECTATIONS" },
+                "AE": { min: 25, max: 49, name: "APPROACHING EXPECTATIONS" },
+                "BE": { min: 0, max: 24, name: "BELOW EXPECTATIONS" }
+            },
+            achievementLevels: {
+                "AL8": { min: 88, max: 100, points: 8 },
+                "AL7": { min: 75, max: 87, points: 7 },
+                "AL6": { min: 62, max: 74, points: 6 },
+                "AL5": { min: 50, max: 61, points: 5 },
+                "AL4": { min: 37, max: 49, points: 4 },
+                "AL3": { min: 25, max: 36, points: 3 },
+                "AL2": { min: 12, max: 24, points: 2 },
+                "AL1": { min: 0, max: 11, points: 1 }
+            }
+        };
+
+        // Cloud Storage Simulation
+        class CloudStorage {
+            constructor() {
+                this.data = {
+                    users: {
+                        'admin@saks.com': { password: 'admin123', role: 'admin', name: 'System Administrator' },
+                        'teacher1@saks.com': { password: 'teacher123', role: 'teacher', name: 'John Doe', subjects: ['901', '903'], classes: ['7N'] },
+                        'parent1@saks.com': { password: 'parent123', role: 'parent', name: 'Jane Smith', children: ['STU001'] }
+                    },
+                    students: {},
+                    teachers: {},
+                    marks: {},
+                    announcements: [],
+                    settings: {
+                        currentYear: 2024,
+                        currentTerm: 'Term 1'
+                    }
+                };
+                this.loadFromCloud();
+            }
+
+            async saveToCloud() {
+                // Simulate cloud API call
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        // In a real app, this would make an API call
+                        console.log('Data saved to cloud');
+                        resolve({ success: true });
+                    }, 500);
+                });
+            }
+
+            async loadFromCloud() {
+                // Simulate cloud API call  
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        // In a real app, this would fetch from API
+                        console.log('Data loaded from cloud');
+                        resolve(this.data);
+                    }, 1000);
+                });
+            }
+
+            async save(key, value) {
+                this.data[key] = value;
+                await this.saveToCloud();
+            }
+
+            get(key) {
+                return this.data[key];
+            }
+
+            async update(key, id, value) {
+                if (!this.data[key]) this.data[key] = {};
+                this.data[key][id] = value;
+                await this.saveToCloud();
+            }
+
+            async delete(key, id) {
+                if (this.data[key] && this.data[key][id]) {
+                    delete this.data[key][id];
+                    await this.saveToCloud();
+                }
+            }
+        }
+
+        // Global instances
+        const cloudStorage = new CloudStorage();
+        let currentUser = null;
+
+        // Utility Functions
+        function calculateGrade(mark) {
+            for (const [level, range] of Object.entries(SCHOOL_CONFIG.performanceLevels)) {
+                if (mark >= range.min && mark <= range.max) {
+                    return level;
+                }
+            }
+            return 'BE';
+        }
+
+        function calculateAchievementLevel(mark) {
+            for (const [level, range] of Object.entries(SCHOOL_CONFIG.achievementLevels)) {
+                if (mark >= range.min && mark <= range.max) {
+                    return level;
+                }
+            }
+            return 'AL1';
+        }
+
+        function getAchievementPoints(mark) {
+            const level = calculateAchievementLevel(mark);
+            return SCHOOL_CONFIG.achievementLevels[level].points;
+        }
+
+        function generateStudentId() {
+            return 'STU' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        function generateTeacherId() {
+            return 'TCH' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        // Authentication System
+        class AuthSystem {
+            async login(username, password, userType) {
+                const users = cloudStorage.get('users');
+                const user = users[username];
+                
+                if (user && user.password === password && user.role === userType) {
+                    currentUser = { username, ...user };
+                    return { success: true, user: currentUser };
+                }
+                return { success: false, message: 'Invalid credentials' };
+            }
+
+            async resetPassword(email) {
+                // Simulate password reset
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({ success: true, message: 'Password reset link sent to ' + email });
+                    }, 1000);
+                });
+            }
+
+            logout() {
+                currentUser = null;
+            }
+        }
+
+        const authSystem = new AuthSystem();
+
+        // UI Management
+        class UIManager {
+            constructor() {
+                this.currentView = null;
+            }
+
+            showLoading() {
+                document.getElementById('loadingScreen').classList.remove('hidden');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+
+            showLogin() {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+
+            showMainApp() {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                this.setupSidebar();
+                this.showDashboard();
+            }
+
+            setupSidebar() {
+                const sidebar = document.getElementById('sidebarMenu');
+                const menuItems = this.getMenuItems();
+                
+                sidebar.innerHTML = menuItems.map(item => `
+                    <div class="mb-2">
+                        <button onclick="uiManager.showView('${item.view}')" 
+                                class="w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 ${item.admin ? 'admin-only' : ''} ${item.teacher ? 'teacher-only' : ''} ${item.parent ? 'parent-only' : ''}">
+                            ${item.name}
+                        </button>
+                    </div>
+                `).join('');
+
+                // Show/hide menu items based on user role
+                if (currentUser.role !== 'admin') {
+                    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                }
+                if (currentUser.role !== 'teacher') {
+                    document.querySelectorAll('.teacher-only').forEach(el => el.style.display = 'none');
+                }
+                if (currentUser.role !== 'parent') {
+                    document.querySelectorAll('.parent-only').forEach(el => el.style.display = 'none');
+                }
+
+                // Update current user display
+                document.getElementById('currentUser').textContent = `${currentUser.name} (${currentUser.role})`;
+            }
+
+            getMenuItems() {
+                return [
+                    { name: '📊 Dashboard', view: 'dashboard' },
+                    { name: '👥 Manage Students', view: 'students', admin: true },
+                    { name: '👨‍🏫 Manage Teachers', view: 'teachers', admin: true },
+                    { name: '📝 Enter Marks', view: 'marks', teacher: true },
+                    { name: '🎯 Marks Management', view: 'marksManagement', admin: true },
+                    { name: '📋 Generate Reports', view: 'reports' },
+                    { name: '📄 Marksheets', view: 'marksheets', admin: true },
+                    { name: '📊 Broadsheet Analysis', view: 'broadsheet', admin: true },
+                    { name: '📢 Announcements', view: 'announcements' },
+                    { name: '👶 Student Results', view: 'studentResults', parent: true },
+                    { name: '⚙️ Settings', view: 'settings', admin: true }
+                ];
+            }
+
+            showView(viewName) {
+                this.currentView = viewName;
+                const contentArea = document.getElementById('contentArea');
+                
+                switch(viewName) {
+                    case 'dashboard':
+                        this.showDashboard();
+                        break;
+                    case 'students':
+                        this.showStudentManagement();
+                        break;
+                    case 'teachers':
+                        this.showTeacherManagement();
+                        break;
+                    case 'marks':
+                        this.showMarksEntry();
+                        break;
+                    case 'marksManagement':
+                        this.showMarksManagement();
+                        break;
+                    case 'reports':
+                        this.showReports();
+                        break;
+                    case 'marksheets':
+                        this.showMarksheets();
+                        break;
+                    case 'broadsheet':
+                        this.showBroadsheet();
+                        break;
+                    case 'announcements':
+                        this.showAnnouncements();
+                        break;
+                    case 'studentResults':
+                        this.showStudentResults();
+                        break;
+                    case 'settings':
+                        this.showSettings();
+                        break;
+                }
+            }
+
+            showDashboard() {
+                const students = cloudStorage.get('students') || {};
+                const teachers = cloudStorage.get('teachers') || {};
+                const announcements = cloudStorage.get('announcements') || [];
+                
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center mb-4">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                                <p class="text-gray-600 dark:text-gray-300">${SCHOOL_CONFIG.name}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Students</h3>
+                            <p class="text-3xl font-bold text-primary">${Object.keys(students).length}</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Teachers</h3>
+                            <p class="text-3xl font-bold text-secondary">${Object.keys(teachers).length}</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Classes</h3>
+                            <p class="text-3xl font-bold text-green-600">${SCHOOL_CONFIG.grades.length}</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Announcements</h3>
+                            <p class="text-3xl font-bold text-yellow-600">${announcements.length}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Announcements</h3>
+                            <div class="space-y-3">
+                                ${announcements.slice(-5).map(ann => `
+                                    <div class="border-l-4 border-primary pl-4">
+                                        <h4 class="font-medium text-gray-900 dark:text-white">${ann.title}</h4>
+                                        <p class="text-sm text-gray-600 dark:text-gray-300">${ann.content.substring(0, 100)}...</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">${new Date(ann.date).toLocaleDateString()}</p>
+                                    </div>
+                                `).join('') || '<p class="text-gray-500 dark:text-gray-400">No announcements yet</p>'}
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+                            <div class="space-y-2">
+                                ${currentUser.role === 'admin' ? `
+                                    <button onclick="uiManager.showView('students')" class="w-full text-left px-4 py-2 bg-primary text-white rounded hover:bg-red-700">Add New Student</button>
+                                    <button onclick="uiManager.showView('teachers')" class="w-full text-left px-4 py-2 bg-secondary text-white rounded hover:bg-blue-700">Add New Teacher</button>
+                                    <button onclick="uiManager.showView('announcements')" class="w-full text-left px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Post Announcement</button>
+                                ` : ''}
+                                ${currentUser.role === 'teacher' ? `
+                                    <button onclick="uiManager.showView('marks')" class="w-full text-left px-4 py-2 bg-primary text-white rounded hover:bg-red-700">Enter Marks</button>
+                                    <button onclick="uiManager.showView('announcements')" class="w-full text-left px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">View Announcements</button>
+                                ` : ''}
+                                ${currentUser.role === 'parent' ? `
+                                    <button onclick="uiManager.showView('studentResults')" class="w-full text-left px-4 py-2 bg-primary text-white rounded hover:bg-red-700">View Child's Results</button>
+                                    <button onclick="uiManager.showView('announcements')" class="w-full text-left px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">View Announcements</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            showStudentManagement() {
+                const students = cloudStorage.get('students') || {};
+                
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Student Management</h1>
+                            </div>
+                            <button onclick="uiManager.showAddStudentForm()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Add New Student</button>
+                        </div>
+                    </div>
+
+                    <div id="studentForm" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Add/Edit Student</h3>
+                        <form id="addStudentForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="hidden" id="studentId">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">S.I. Number</label>
+                                <input type="text" id="siNumber" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assessment Number</label>
+                                <input type="text" id="assessmentNumber" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                <input type="text" id="studentName" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gender</label>
+                                <select id="studentGender" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade/Class</label>
+                                <select id="studentGrade" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Grade</option>
+                                    ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
+                                <input type="date" id="studentDOB" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div class="md:col-span-2">
+                                <div class="flex space-x-4">
+                                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Save Student</button>
+                                    <button type="button" onclick="uiManager.hideStudentForm()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Students List</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">S.I. Number</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assessment No.</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gender</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Grade</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        ${Object.entries(students).map(([id, student]) => `
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.siNumber}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.assessmentNumber}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.name}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.gender}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.grade}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <button onclick="uiManager.editStudent('${id}')" class="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
+                                                    <button onclick="uiManager.deleteStudent('${id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                                                </td>
+                                            </tr>
+                                        `).join('') || '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No students found</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Add form submit handler
+                document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.saveStudent();
+                });
+            }
+
+            showAddStudentForm() {
+                document.getElementById('studentForm').classList.remove('hidden');
+                document.getElementById('addStudentForm').reset();
+                document.getElementById('studentId').value = '';
+            }
+
+            hideStudentForm() {
+                document.getElementById('studentForm').classList.add('hidden');
+            }
+
+            async editStudent(id) {
+                const students = cloudStorage.get('students');
+                const student = students[id];
+                if (student) {
+                    document.getElementById('studentForm').classList.remove('hidden');
+                    document.getElementById('studentId').value = id;
+                    document.getElementById('siNumber').value = student.siNumber;
+                    document.getElementById('assessmentNumber').value = student.assessmentNumber;
+                    document.getElementById('studentName').value = student.name;
+                    document.getElementById('studentGender').value = student.gender;
+                    document.getElementById('studentGrade').value = student.grade;
+                    document.getElementById('studentDOB').value = student.dateOfBirth || '';
+                }
+            }
+
+            async deleteStudent(id) {
+                if (confirm('Are you sure you want to delete this student?')) {
+                    await cloudStorage.delete('students', id);
+                    this.showStudentManagement();
+                }
+            }
+
+            async saveStudent() {
+                const form = document.getElementById('addStudentForm');
+                const formData = new FormData(form);
+                
+                const student = {
+                    id: document.getElementById('studentId').value || generateStudentId(),
+                    siNumber: document.getElementById('siNumber').value,
+                    assessmentNumber: document.getElementById('assessmentNumber').value,
+                    name: document.getElementById('studentName').value,
+                    gender: document.getElementById('studentGender').value,
+                    grade: document.getElementById('studentGrade').value,
+                    dateOfBirth: document.getElementById('studentDOB').value,
+                    dateRegistered: new Date().toISOString()
+                };
+
+                await cloudStorage.update('students', student.id, student);
+                this.hideStudentForm();
+                this.showStudentManagement();
+            }
+
+            showTeacherManagement() {
+                const teachers = cloudStorage.get('teachers') || {};
+                
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Teacher Management</h1>
+                            </div>
+                            <button onclick="uiManager.showAddTeacherForm()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Add New Teacher</button>
+                        </div>
+                    </div>
+
+                    <div id="teacherForm" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Add/Edit Teacher</h3>
+                        <form id="addTeacherForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="hidden" id="teacherId">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                <input type="text" id="teacherName" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                                <input type="email" id="teacherEmail" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                                <input type="tel" id="teacherPhone" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Employee ID</label>
+                                <input type="text" id="teacherEmployeeId" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Learning Areas (Hold Ctrl to select multiple)</label>
+                                <select id="teacherSubjects" multiple class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    ${Object.entries(SCHOOL_CONFIG.learningAreas).map(([code, name]) => `<option value="${code}">${code} - ${name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class Teacher For (Optional)</label>
+                                <select id="teacherClass" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select Class</option>
+                                    ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <div class="flex space-x-4">
+                                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Save Teacher</button>
+                                    <button type="button" onclick="uiManager.hideTeacherForm()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Teachers List</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Employee ID</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Learning Areas</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Class Teacher</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        ${Object.entries(teachers).map(([id, teacher]) => `
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${teacher.employeeId}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${teacher.name}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${teacher.email}</td>
+                                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">${(teacher.subjects || []).join(', ')}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${teacher.classTeacher || '-'}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <button onclick="uiManager.editTeacher('${id}')" class="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
+                                                    <button onclick="uiManager.deleteTeacher('${id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                                                </td>
+                                            </tr>
+                                        `).join('') || '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No teachers found</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Add form submit handler
+                document.getElementById('addTeacherForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.saveTeacher();
+                });
+            }
+
+            showAddTeacherForm() {
+                document.getElementById('teacherForm').classList.remove('hidden');
+                document.getElementById('addTeacherForm').reset();
+                document.getElementById('teacherId').value = '';
+            }
+
+            hideTeacherForm() {
+                document.getElementById('teacherForm').classList.add('hidden');
+            }
+
+            async editTeacher(id) {
+                const teachers = cloudStorage.get('teachers');
+                const teacher = teachers[id];
+                if (teacher) {
+                    document.getElementById('teacherForm').classList.remove('hidden');
+                    document.getElementById('teacherId').value = id;
+                    document.getElementById('teacherName').value = teacher.name;
+                    document.getElementById('teacherEmail').value = teacher.email;
+                    document.getElementById('teacherPhone').value = teacher.phone || '';
+                    document.getElementById('teacherEmployeeId').value = teacher.employeeId;
+                    
+                    // Set selected subjects
+                    const subjectSelect = document.getElementById('teacherSubjects');
+                    Array.from(subjectSelect.options).forEach(option => {
+                        option.selected = teacher.subjects.includes(option.value);
+                    });
+                    
+                    document.getElementById('teacherClass').value = teacher.classTeacher || '';
+                }
+            }
+
+            async deleteTeacher(id) {
+                if (confirm('Are you sure you want to delete this teacher?')) {
+                    await cloudStorage.delete('teachers', id);
+                    this.showTeacherManagement();
+                }
+            }
+
+            async saveTeacher() {
+                const subjectSelect = document.getElementById('teacherSubjects');
+                const selectedSubjects = Array.from(subjectSelect.selectedOptions).map(option => option.value);
+                
+                const teacher = {
+                    id: document.getElementById('teacherId').value || generateTeacherId(),
+                    name: document.getElementById('teacherName').value,
+                    email: document.getElementById('teacherEmail').value,
+                    phone: document.getElementById('teacherPhone').value,
+                    employeeId: document.getElementById('teacherEmployeeId').value,
+                    subjects: selectedSubjects,
+                    classTeacher: document.getElementById('teacherClass').value,
+                    dateRegistered: new Date().toISOString()
+                };
+
+                await cloudStorage.update('teachers', teacher.id, teacher);
+                
+                // Also update user account if email changed
+                const users = cloudStorage.get('users');
+                users[teacher.email] = {
+                    password: 'teacher123', // Default password
+                    role: 'teacher',
+                    name: teacher.name,
+                    subjects: selectedSubjects,
+                    classes: teacher.classTeacher ? [teacher.classTeacher] : []
+                };
+                await cloudStorage.save('users', users);
+                
+                this.hideTeacherForm();
+                this.showTeacherManagement();
+            }
+
+            showMarksEntry() {
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Marks Entry</h1>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Select Parameters</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                                <select id="marksYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === 2024 ? 'selected' : ''}>${year}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade/Class</label>
+                                <select id="marksGrade" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Grade</option>
+                                    ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
+                                <select id="marksTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Term</option>
+                                    ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}">${term}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam Type</label>
+                                <select id="marksExamType" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Exam Type</option>
+                                    ${SCHOOL_CONFIG.examTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Learning Area</label>
+                                <select id="marksSubject" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Learning Area</option>
+                                    ${Object.entries(SCHOOL_CONFIG.learningAreas).map(([code, name]) => `<option value="${code}">${code} - ${name}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="uiManager.loadStudentsForMarks()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Load Students</button>
+                    </div>
+
+                    <div id="marksEntryArea" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Enter Marks</h3>
+                            <button onclick="uiManager.submitMarks()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Submit Marks</button>
+                        </div>
+                        <div id="marksTable"></div>
+                    </div>
+                `;
+            }
+
+            async loadStudentsForMarks() {
+                const year = document.getElementById('marksYear').value;
+                const grade = document.getElementById('marksGrade').value;
+                const term = document.getElementById('marksTerm').value;
+                const examType = document.getElementById('marksExamType').value;
+                const subject = document.getElementById('marksSubject').value;
+
+                if (!year || !grade || !term || !examType || !subject) {
+                    alert('Please select all parameters');
+                    return;
+                }
+
+                // Check if teacher is authorized for this subject
+                if (currentUser.role === 'teacher' && !currentUser.subjects.includes(subject)) {
+                    alert('You are not authorized to enter marks for this learning area');
+                    return;
+                }
+
+                const students = cloudStorage.get('students') || {};
+                const gradeStudents = Object.entries(students).filter(([id, student]) => student.grade === grade);
+
+                if (gradeStudents.length === 0) {
+                    alert('No students found for this grade');
+                    return;
+                }
+
+                // Load existing marks if any
+                const marks = cloudStorage.get('marks') || {};
+                const marksKey = `${year}-${grade}-${term}-${examType}-${subject}`;
+                const existingMarks = marks[marksKey] || {};
+
+                const marksTable = `
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">S/No</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">S.I. Number</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assessment No.</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gender</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mark (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                ${gradeStudents.map(([id, student], index) => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${index + 1}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.siNumber}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.assessmentNumber}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.name}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.gender}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <input type="number" 
+                                                   min="0" 
+                                                   max="100" 
+                                                   step="0.1"
+                                                   class="w-20 text-base px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" 
+                                                   data-student-id="${id}"
+                                                   value="${existingMarks[id] || ''}"
+                                                   placeholder="0-100">
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                document.getElementById('marksTable').innerHTML = marksTable;
+                document.getElementById('marksEntryArea').classList.remove('hidden');
+            }
+
+            async submitMarks() {
+                const year = document.getElementById('marksYear').value;
+                const grade = document.getElementById('marksGrade').value;
+                const term = document.getElementById('marksTerm').value;
+                const examType = document.getElementById('marksExamType').value;
+                const subject = document.getElementById('marksSubject').value;
+
+                const marksKey = `${year}-${grade}-${term}-${examType}-${subject}`;
+                const markInputs = document.querySelectorAll('[data-student-id]');
+                
+                const marksData = {};
+                let hasEmptyMarks = false;
+
+                markInputs.forEach(input => {
+                    const studentId = input.dataset.studentId;
+                    const mark = parseFloat(input.value);
+                    
+                    if (input.value === '') {
+                        hasEmptyMarks = true;
+                    } else if (mark < 0 || mark > 100) {
+                        alert('Marks must be between 0 and 100');
+                        return;
+                    } else {
+                        marksData[studentId] = mark;
+                    }
+                });
+
+                if (hasEmptyMarks && !confirm('Some students have no marks entered. Continue anyway?')) {
+                    return;
+                }
+
+                const marksRecord = {
+                    year,
+                    grade,
+                    term,
+                    examType,
+                    subject,
+                    subjectName: SCHOOL_CONFIG.learningAreas[subject],
+                    marks: marksData,
+                    submittedBy: currentUser.name,
+                    submittedAt: new Date().toISOString(),
+                    status: 'submitted'
+                };
+
+                await cloudStorage.update('marks', marksKey, marksRecord);
+                alert('Marks submitted successfully!');
+                
+                // Reset form
+                document.getElementById('marksEntryArea').classList.add('hidden');
+                document.getElementById('marksYear').value = '2024';
+                document.getElementById('marksGrade').value = '';
+                document.getElementById('marksTerm').value = '';
+                document.getElementById('marksExamType').value = '';
+                document.getElementById('marksSubject').value = '';
+            }
+
+            showMarksManagement() {
+                const marks = cloudStorage.get('marks') || {};
+                
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Marks Management</h1>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Edit Marks</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                                <select id="editYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === 2024 ? 'selected' : ''}>${year}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade/Class</label>
+                                <select id="editGrade" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select Grade</option>
+                                    ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
+                                <select id="editTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select Term</option>
+                                    ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}">${term}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam Type</label>
+                                <select id="editExamType" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select Exam Type</option>
+                                    ${SCHOOL_CONFIG.examTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Learning Area</label>
+                                <select id="editSubject" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select Learning Area</option>
+                                    ${Object.entries(SCHOOL_CONFIG.learningAreas).map(([code, name]) => `<option value="${code}">${code} - ${name}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="uiManager.loadMarksForEdit()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Load Marks</button>
+                    </div>
+
+                    <div id="marksEditArea" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit Marks</h3>
+                            <button onclick="uiManager.updateMarks()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Update Marks</button>
+                        </div>
+                        <div id="marksEditTable"></div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Submitted Marks</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Year</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Grade</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Term</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Exam Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Learning Area</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Submitted By</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        ${Object.entries(marks).map(([key, record]) => `
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${record.year}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${record.grade}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${record.term}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${record.examType}</td>
+                                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">${record.subjectName}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${record.submittedBy}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${new Date(record.submittedAt).toLocaleDateString()}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <button onclick="uiManager.editMarksRecord('${key}')" class="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
+                                                    <button onclick="uiManager.deleteMarksRecord('${key}')" class="text-red-600 hover:text-red-900">Delete</button>
+                                                </td>
+                                            </tr>
+                                        `).join('') || '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No marks submitted yet</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async loadMarksForEdit() {
+                const year = document.getElementById('editYear').value;
+                const grade = document.getElementById('editGrade').value;
+                const term = document.getElementById('editTerm').value;
+                const examType = document.getElementById('editExamType').value;
+                const subject = document.getElementById('editSubject').value;
+
+                if (!year || !grade || !term || !examType || !subject) {
+                    alert('Please select all parameters');
+                    return;
+                }
+
+                const marksKey = `${year}-${grade}-${term}-${examType}-${subject}`;
+                const marks = cloudStorage.get('marks') || {};
+                const marksRecord = marks[marksKey];
+
+                if (!marksRecord) {
+                    alert('No marks found for these parameters');
+                    return;
+                }
+
+                const students = cloudStorage.get('students') || {};
+                const gradeStudents = Object.entries(students).filter(([id, student]) => student.grade === grade);
+
+                const marksTable = `
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">S/No</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">S.I. Number</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assessment No.</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gender</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mark (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                ${gradeStudents.map(([id, student], index) => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${index + 1}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.siNumber}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.assessmentNumber}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.name}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${student.gender}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <input type="number" 
+                                                   min="0" 
+                                                   max="100" 
+                                                   step="0.1"
+                                                   class="w-20 text-base px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" 
+                                                   data-student-id="${id}"
+                                                   value="${marksRecord.marks[id] || ''}"
+                                                   placeholder="0-100">
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                document.getElementById('marksEditTable').innerHTML = marksTable;
+                document.getElementById('marksEditArea').classList.remove('hidden');
+            }
+
+            async updateMarks() {
+                const year = document.getElementById('editYear').value;
+                const grade = document.getElementById('editGrade').value;
+                const term = document.getElementById('editTerm').value;
+                const examType = document.getElementById('editExamType').value;
+                const subject = document.getElementById('editSubject').value;
+
+                const marksKey = `${year}-${grade}-${term}-${examType}-${subject}`;
+                const markInputs = document.querySelectorAll('#marksEditArea [data-student-id]');
+                
+                const marksData = {};
+
+                markInputs.forEach(input => {
+                    const studentId = input.dataset.studentId;
+                    const mark = parseFloat(input.value);
+                    
+                    if (input.value !== '' && (mark < 0 || mark > 100)) {
+                        alert('Marks must be between 0 and 100');
+                        return;
+                    } else if (input.value !== '') {
+                        marksData[studentId] = mark;
+                    }
+                });
+
+                const marks = cloudStorage.get('marks');
+                const existingRecord = marks[marksKey];
+                
+                const updatedRecord = {
+                    ...existingRecord,
+                    marks: marksData,
+                    lastEditedBy: currentUser.name,
+                    lastEditedAt: new Date().toISOString()
+                };
+
+                await cloudStorage.update('marks', marksKey, updatedRecord);
+                alert('Marks updated successfully!');
+                
+                this.showMarksManagement();
+            }
+
+            async editMarksRecord(key) {
+                const marks = cloudStorage.get('marks');
+                const record = marks[key];
+                
+                document.getElementById('editYear').value = record.year;
+                document.getElementById('editGrade').value = record.grade;
+                document.getElementById('editTerm').value = record.term;
+                document.getElementById('editExamType').value = record.examType;
+                document.getElementById('editSubject').value = record.subject;
+                
+                this.loadMarksForEdit();
+            }
+
+            async deleteMarksRecord(key) {
+                if (confirm('Are you sure you want to delete this marks record?')) {
+                    await cloudStorage.delete('marks', key);
+                    this.showMarksManagement();
+                }
+            }
+
+            showReports() {
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Generate Reports</h1>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Individual Report Card</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                                    <select id="reportYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === 2024 ? 'selected' : ''}>${year}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade/Class</label>
+                                    <select id="reportGrade" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        <option value="">Select Grade</option>
+                                        ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
+                                    <select id="reportTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        <option value="">Select Term</option>
+                                        ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}">${term}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student</label>
+                                    <select id="reportStudent" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        <option value="">Select Student</option>
+                                    </select>
+                                </div>
+                                <button onclick="uiManager.generateIndividualReport()" class="w-full bg-primary text-white py-2 px-4 rounded hover:bg-red-700">Generate Report Card</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Class Report Cards</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                                    <select id="classReportYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === 2024 ? 'selected' : ''}>${year}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade/Class</label>
+                                    <select id="classReportGrade" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        <option value="">Select Grade</option>
+                                        ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
+                                    <select id="classReportTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        <option value="">Select Term</option>
+                                        ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}">${term}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <button onclick="uiManager.generateClassReports()" class="w-full bg-secondary text-white py-2 px-4 rounded hover:bg-blue-700">Generate Class Reports</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Preview Area -->
+                    <div id="reportPreview" class="hidden mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4 no-print">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Report Preview</h3>
+                            <div class="space-x-2">
+                                <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Print</button>
+                                <button onclick="uiManager.hideReportPreview()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Close</button>
+                            </div>
+                        </div>
+                        <div id="reportContent"></div>
+                    </div>
+                `;
+
+                // Load students when grade changes
+                document.getElementById('reportGrade').addEventListener('change', () => {
+                    this.loadStudentsForReport();
+                });
+            }
+
+            loadStudentsForReport() {
+                const grade = document.getElementById('reportGrade').value;
+                const studentSelect = document.getElementById('reportStudent');
+                
+                if (!grade) {
+                    studentSelect.innerHTML = '<option value="">Select Student</option>';
+                    return;
+                }
+
+                const students = cloudStorage.get('students') || {};
+                const gradeStudents = Object.entries(students).filter(([id, student]) => student.grade === grade);
+                
+                studentSelect.innerHTML = '<option value="">Select Student</option>' +
+                    gradeStudents.map(([id, student]) => `<option value="${id}">${student.name} (${student.siNumber})</option>`).join('');
+            }
+
+            async generateIndividualReport() {
+                const year = document.getElementById('reportYear').value;
+                const grade = document.getElementById('reportGrade').value;
+                const term = document.getElementById('reportTerm').value;
+                const studentId = document.getElementById('reportStudent').value;
+
+                if (!year || !grade || !term || !studentId) {
+                    alert('Please select all parameters');
+                    return;
+                }
+
+                const students = cloudStorage.get('students') || {};
+                const marks = cloudStorage.get('marks') || {};
+                const teachers = cloudStorage.get('teachers') || {};
+                
+                const student = students[studentId];
+                if (!student) {
+                    alert('Student not found');
+                    return;
+                }
+
+                // Get class teacher
+                const classTeacher = Object.values(teachers).find(t => t.classTeacher === grade);
+                
+                // Calculate marks and grades
+                const studentMarks = {};
+                let totalMarks = 0;
+                let totalSubjects = 0;
+                let totalPoints = 0;
+
+                Object.entries(SCHOOL_CONFIG.learningAreas).forEach(([code, name]) => {
+                    const midtermKey = `${year}-${grade}-${term}-Midterm-${code}`;
+                    const endtermKey = `${year}-${grade}-${term}-Endterm-${code}`;
+                    
+                    const midtermMark = marks[midtermKey]?.marks[studentId] || 0;
+                    const endtermMark = marks[endtermKey]?.marks[studentId] || 0;
+                    
+                    let averageMark = 0;
+                    let displayMarks = { midterm: '-', endterm: '-' };
+                    
+                    if (term.includes('midterm') || marks[midtermKey]) {
+                        displayMarks.midterm = midtermMark || '-';
+                        averageMark = midtermMark;
+                    }
+                    
+                    if (marks[endtermKey]) {
+                        displayMarks.endterm = endtermMark || '-';
+                        if (midtermMark && endtermMark) {
+                            averageMark = (midtermMark + endtermMark) / 2;
+                        } else {
+                            averageMark = endtermMark;
+                        }
+                    }
+                    
+                    if (averageMark > 0) {
+                        const grade = calculateGrade(averageMark);
+                        const achievementLevel = calculateAchievementLevel(averageMark);
+                        const points = getAchievementPoints(averageMark);
+                        
+                        studentMarks[code] = {
+                            name,
+                            midterm: displayMarks.midterm,
+                            endterm: displayMarks.endterm,
+                            average: Math.round(averageMark * 10) / 10,
+                            grade,
+                            achievementLevel,
+                            points,
+                            remarks: this.getSubjectRemarks(averageMark)
+                        };
+                        
+                        totalMarks += averageMark;
+                        totalSubjects++;
+                        totalPoints += points;
+                    }
+                });
+
+                const averageMark = totalSubjects > 0 ? totalMarks / totalSubjects : 0;
+                const overallGrade = calculateGrade(averageMark);
+                const overallAchievementLevel = calculateAchievementLevel(averageMark);
+
+                // Generate report card HTML
+                const reportCard = this.generateReportCardHTML(student, studentMarks, {
+                    year,
+                    term,
+                    grade,
+                    totalMarks: Math.round(totalMarks),
+                    averageMark: Math.round(averageMark * 10) / 10,
+                    totalPoints,
+                    overallGrade,
+                    overallAchievementLevel,
+                    classTeacher: classTeacher?.name || 'N/A',
+                    totalSubjects
+                });
+
+                document.getElementById('reportContent').innerHTML = reportCard;
+                document.getElementById('reportPreview').classList.remove('hidden');
+            }
+
+            getSubjectRemarks(mark) {
+                if (mark >= 90) return 'Excellent';
+                if (mark >= 80) return 'Very Good';
+                if (mark >= 70) return 'Good';
+                if (mark >= 60) return 'Satisfactory';
+                if (mark >= 50) return 'Fair';
+                if (mark >= 40) return 'Needs Improvement';
+                return 'Requires Extra Support';
+            }
+
+            generateReportCardHTML(student, marks, summary) {
+                const performanceLevel = SCHOOL_CONFIG.performanceLevels[summary.overallGrade];
+                
+                return `
+                    <div class="max-w-4xl mx-auto bg-white p-8 print:p-4" style="font-size: 12px;">
+                        <!-- Header -->
+                        <div class="text-center border-b-2 border-primary pb-4 mb-6">
+                            <div class="flex items-center justify-center mb-2">
+                                <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-16 h-16 object-contain mr-4">
+                                <div>
+                                    <h1 class="text-xl font-bold text-primary">${SCHOOL_CONFIG.name}</h1>
+                                    <p class="text-sm">${SCHOOL_CONFIG.address}</p>
+                                    <p class="text-sm font-semibold">MOTTO: ${SCHOOL_CONFIG.motto}</p>
+                                </div>
+                            </div>
+                            <h2 class="text-lg font-bold mt-4">STUDENT REPORT CARD</h2>
+                        </div>
+
+                        <!-- Student Information -->
+                        <div class="grid grid-cols-2 gap-8 mb-6">
+                            <div>
+                                <table class="w-full text-sm">
+                                    <tr><td class="font-semibold">S.I. Number:</td><td>${student.siNumber}</td></tr>
+                                    <tr><td class="font-semibold">Assessment Number:</td><td>${student.assessmentNumber}</td></tr>
+                                    <tr><td class="font-semibold">Student Name:</td><td>${student.name}</td></tr>
+                                    <tr><td class="font-semibold">Gender:</td><td>${student.gender}</td></tr>
+                                </table>
+                            </div>
+                            <div>
+                                <table class="w-full text-sm">
+                                    <tr><td class="font-semibold">Grade:</td><td>${summary.grade}</td></tr>
+                                    <tr><td class="font-semibold">Academic Year:</td><td>${summary.year}</td></tr>
+                                    <tr><td class="font-semibold">Term:</td><td>${summary.term}</td></tr>
+                                    <tr><td class="font-semibold">Class Teacher:</td><td>${summary.classTeacher}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Marks Table -->
+                        <div class="mb-6">
+                            <table class="w-full border-collapse border border-gray-400 text-xs">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="border border-gray-400 p-2">Learning Area</th>
+                                        <th class="border border-gray-400 p-2">Midterm</th>
+                                        <th class="border border-gray-400 p-2">Endterm</th>
+                                        <th class="border border-gray-400 p-2">Average</th>
+                                        <th class="border border-gray-400 p-2">Performance Level</th>
+                                        <th class="border border-gray-400 p-2">Achievement Level</th>
+                                        <th class="border border-gray-400 p-2">Points</th>
+                                        <th class="border border-gray-400 p-2">Teacher Initial</th>
+                                        <th class="border border-gray-400 p-2">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.entries(marks).map(([code, mark]) => `
+                                        <tr>
+                                            <td class="border border-gray-400 p-2">${mark.name}</td>
+                                            <td class="border border-gray-400 p-2 text-center">${mark.midterm}</td>
+                                            <td class="border border-gray-400 p-2 text-center">${mark.endterm}</td>
+                                            <td class="border border-gray-400 p-2 text-center">${mark.average}</td>
+                                            <td class="border border-gray-400 p-2 text-center">${mark.grade}</td>
+                                            <td class="border border-gray-400 p-2 text-center">${mark.achievementLevel}</td>
+                                            <td class="border border-gray-400 p-2 text-center">${mark.points}</td>
+                                            <td class="border border-gray-400 p-2 text-center">JD</td>
+                                            <td class="border border-gray-400 p-2">${mark.remarks}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="grid grid-cols-2 gap-8 mb-6">
+                            <div>
+                                <h3 class="font-bold mb-2">SUMMARY</h3>
+                                <table class="w-full text-sm">
+                                    <tr><td>Total Marks:</td><td>${summary.totalMarks}</td></tr>
+                                    <tr><td>Average Mark:</td><td>${summary.averageMark}%</td></tr>
+                                    <tr><td>Total Points:</td><td>${summary.totalPoints}</td></tr>
+                                    <tr><td class="font-bold">Overall Performance Level:</td><td class="font-bold">${performanceLevel.name}</td></tr>
+                                    <tr><td class="font-bold">Overall Achievement Level:</td><td class="font-bold">${summary.overallAchievementLevel}</td></tr>
+                                </table>
+                            </div>
+                            <div>
+                                <h3 class="font-bold mb-2">COMMENTS</h3>
+                                <div class="text-sm">
+                                    <p><strong>Class Teacher's Comments:</strong></p>
+                                    <p class="mb-2">${this.getClassTeacherComments(summary.averageMark)}</p>
+                                    <p><strong>Head of Institution Comments:</strong></p>
+                                    <p>${this.getHOIComments(summary.averageMark)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Signatures -->
+                        <div class="grid grid-cols-2 gap-8 mt-8">
+                            <div>
+                                <p>Class Teacher Signature: ________________</p>
+                                <p>Date: ________________</p>
+                            </div>
+                            <div>
+                                <p>Head of Institution Signature: ________________</p>
+                                <p>Date: ________________</p>
+                            </div>
+                        </div>
+
+                        <!-- Term Dates -->
+                        <div class="mt-6 text-center text-sm">
+                            <p>Opening Day: ________________ &nbsp;&nbsp;&nbsp; Closing Day: ________________</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getClassTeacherComments(averageMark) {
+                if (averageMark >= 85) return 'Excellent performance! Keep up the outstanding work.';
+                if (averageMark >= 75) return 'Very good performance. Continue working hard.';
+                if (averageMark >= 65) return 'Good performance. With more effort, you can achieve better results.';
+                if (averageMark >= 50) return 'Satisfactory performance. More practice and study needed.';
+                return 'Needs significant improvement. Extra support and practice required.';
+            }
+
+            getHOIComments(averageMark) {
+                if (averageMark >= 80) return 'Commendable performance. Well done!';
+                if (averageMark >= 65) return 'Good effort. Keep striving for excellence.';
+                if (averageMark >= 50) return 'Fair performance. Work harder to improve.';
+                return 'Requires additional support and guidance.';
+            }
+
+            hideReportPreview() {
+                document.getElementById('reportPreview').classList.add('hidden');
+            }
+
+            showMarksheets() {
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Generate Marksheets</h1>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Marksheet Parameters</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                                <select id="marksheetYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === 2024 ? 'selected' : ''}>${year}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade/Class</label>
+                                <select id="marksheetGrade" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Grade</option>
+                                    ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
+                                <select id="marksheetTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Term</option>
+                                    ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}">${term}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam Type</label>
+                                <select id="marksheetExamType" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Exam Type</option>
+                                    ${SCHOOL_CONFIG.examTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="uiManager.generateMarksheet()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Generate Marksheet</button>
+                    </div>
+
+                    <!-- Marksheet Preview -->
+                    <div id="marksheetPreview" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4 no-print">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Marksheet Preview</h3>
+                            <div class="space-x-2">
+                                <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Print</button>
+                                <button onclick="uiManager.hideMarksheetPreview()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Close</button>
+                            </div>
+                        </div>
+                        <div id="marksheetContent"></div>
+                    </div>
+                `;
+            }
+
+            async generateMarksheet() {
+                const year = document.getElementById('marksheetYear').value;
+                const grade = document.getElementById('marksheetGrade').value;
+                const term = document.getElementById('marksheetTerm').value;
+                const examType = document.getElementById('marksheetExamType').value;
+
+                if (!year || !grade || !term || !examType) {
+                    alert('Please select all parameters');
+                    return;
+                }
+
+                const students = cloudStorage.get('students') || {};
+                const gradeStudents = Object.entries(students)
+                    .filter(([id, student]) => student.grade === grade)
+                    .sort((a, b) => a[1].name.localeCompare(b[1].name));
+
+                if (gradeStudents.length === 0) {
+                    alert('No students found for this grade');
+                    return;
+                }
+
+                // Generate marksheet pages (40 students per page)
+                const studentsPerPage = 40;
+                const totalPages = Math.ceil(gradeStudents.length / studentsPerPage);
+                let marksheetHTML = '';
+
+                for (let page = 0; page < totalPages; page++) {
+                    const startIndex = page * studentsPerPage;
+                    const endIndex = Math.min(startIndex + studentsPerPage, gradeStudents.length);
+                    const pageStudents = gradeStudents.slice(startIndex, endIndex);
+
+                    marksheetHTML += this.generateMarksheetPageHTML(pageStudents, {
+                        year,
+                        grade,
+                        term,
+                        examType,
+                        page: page + 1,
+                        totalPages,
+                        startIndex
+                    });
+
+                    if (page < totalPages - 1) {
+                        marksheetHTML += '<div style="page-break-after: always;"></div>';
+                    }
+                }
+
+                // Add summary for last page
+                const maleCount = gradeStudents.filter(([id, student]) => student.gender === 'Male').length;
+                const femaleCount = gradeStudents.filter(([id, student]) => student.gender === 'Female').length;
+                
+                marksheetHTML += `
+                    <div class="mt-6 text-sm">
+                        <p><strong>Class Summary:</strong></p>
+                        <p>Male Students: ${maleCount}</p>
+                        <p>Female Students: ${femaleCount}</p>
+                        <p>Total Students: ${gradeStudents.length}</p>
+                    </div>
+                `;
+
+                document.getElementById('marksheetContent').innerHTML = marksheetHTML;
+                document.getElementById('marksheetPreview').classList.remove('hidden');
+            }
+
+            generateMarksheetPageHTML(students, params) {
+                return `
+                    <div class="max-w-4xl mx-auto bg-white p-6 print:p-4 mb-8" style="font-size: 11px;">
+                        <!-- Header -->
+                        <div class="text-center border-b-2 border-primary pb-4 mb-6">
+                            <div class="flex items-center justify-center mb-2">
+                                <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                                <div>
+                                    <h1 class="text-lg font-bold text-primary">${SCHOOL_CONFIG.name}</h1>
+                                    <p class="text-xs">${SCHOOL_CONFIG.address}</p>
+                                    <p class="text-xs font-semibold">MOTTO: ${SCHOOL_CONFIG.motto}</p>
+                                </div>
+                            </div>
+                            <h2 class="text-base font-bold mt-4">MARKSHEET - ${params.examType} - ${params.term}</h2>
+                            <p class="text-sm">Academic Year: ${params.year} | Grade: ${params.grade} | Page ${params.page} of ${params.totalPages}</p>
+                        </div>
+
+                        <!-- Marksheet Table -->
+                        <table class="w-full border-collapse border border-gray-400 text-xs">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-400 p-1 w-8">S/No</th>
+                                    <th class="border border-gray-400 p-1 w-16">S.I. No.</th>
+                                    <th class="border border-gray-400 p-1 w-20">Assessment No.</th>
+                                    <th class="border border-gray-400 p-1">Name</th>
+                                    <th class="border border-gray-400 p-1 w-12">Gender</th>
+                                    ${Object.entries(SCHOOL_CONFIG.learningAreas).map(([code, name]) => 
+                                        `<th class="border border-gray-400 p-1 w-12" style="writing-mode: vertical-rl; text-orientation: mixed;">${code}</th>`
+                                    ).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${students.map(([id, student], index) => `
+                                    <tr>
+                                        <td class="border border-gray-400 p-1 text-center">${params.startIndex + index + 1}</td>
+                                        <td class="border border-gray-400 p-1 text-center">${student.siNumber}</td>
+                                        <td class="border border-gray-400 p-1 text-center">${student.assessmentNumber}</td>
+                                        <td class="border border-gray-400 p-1">${student.name}</td>
+                                        <td class="border border-gray-400 p-1 text-center">${student.gender.charAt(0)}</td>
+                                        ${Object.keys(SCHOOL_CONFIG.learningAreas).map(() => 
+                                            `<td class="border border-gray-400 p-1 h-8"></td>`
+                                        ).join('')}
+                                    </tr>
+                                `).join('')}
+                                
+                                <!-- Fill remaining rows to reach 40 per page -->
+                                ${Array.from({length: Math.max(0, 40 - students.length)}, (_, index) => `
+                                    <tr>
+                                        <td class="border border-gray-400 p-1 text-center">${params.startIndex + students.length + index + 1}</td>
+                                        <td class="border border-gray-400 p-1 h-8"></td>
+                                        <td class="border border-gray-400 p-1"></td>
+                                        <td class="border border-gray-400 p-1"></td>
+                                        <td class="border border-gray-400 p-1"></td>
+                                        ${Object.keys(SCHOOL_CONFIG.learningAreas).map(() => 
+                                            `<td class="border border-gray-400 p-1"></td>`
+                                        ).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        <!-- Learning Areas Legend -->
+                        <div class="mt-4 text-xs">
+                            <h4 class="font-bold mb-2">Learning Areas:</h4>
+                            <div class="grid grid-cols-3 gap-2">
+                                ${Object.entries(SCHOOL_CONFIG.learningAreas).map(([code, name]) => 
+                                    `<div>${code} - ${name}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            hideMarksheetPreview() {
+                document.getElementById('marksheetPreview').classList.add('hidden');
+            }
+
+            showBroadsheet() {
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Broadsheet Analysis</h1>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Analysis Parameters</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                                <select id="analysisYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === 2024 ? 'selected' : ''}>${year}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grade/Class</label>
+                                <select id="analysisGrade" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Grade</option>
+                                    ${SCHOOL_CONFIG.grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
+                                <select id="analysisTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Term</option>
+                                    ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}">${term}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Analysis Type</label>
+                                <select id="analysisType" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                    <option value="">Select Type</option>
+                                    <option value="endterm">End Term (Average of Mid + End)</option>
+                                    <option value="midterm">Mid Term Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="uiManager.generateBroadsheet()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Generate Analysis</button>
+                    </div>
+
+                    <!-- Broadsheet Preview -->
+                    <div id="broadsheetPreview" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4 no-print">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Broadsheet Analysis</h3>
+                            <div class="space-x-2">
+                                <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Print</button>
+                                <button onclick="uiManager.hideBroadsheetPreview()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Close</button>
+                            </div>
+                        </div>
+                        <div id="broadsheetContent"></div>
+                    </div>
+                `;
+            }
+
+            async generateBroadsheet() {
+                const year = document.getElementById('analysisYear').value;
+                const grade = document.getElementById('analysisGrade').value;
+                const term = document.getElementById('analysisTerm').value;
+                const analysisType = document.getElementById('analysisType').value;
+
+                if (!year || !grade || !term || !analysisType) {
+                    alert('Please select all parameters');
+                    return;
+                }
+
+                const students = cloudStorage.get('students') || {};
+                const marks = cloudStorage.get('marks') || {};
+                
+                const gradeStudents = Object.entries(students).filter(([id, student]) => student.grade === grade);
+
+                if (gradeStudents.length === 0) {
+                    alert('No students found for this grade');
+                    return;
+                }
+
+                // Calculate all student results
+                const studentResults = [];
+                
+                gradeStudents.forEach(([studentId, student]) => {
+                    const studentData = {
+                        id: studentId,
+                        siNumber: student.siNumber,
+                        assessmentNumber: student.assessmentNumber,
+                        name: student.name,
+                        gender: student.gender,
+                        subjects: {},
+                        totalMarks: 0,
+                        totalPoints: 0,
+                        subjectCount: 0,
+                        averageMark: 0,
+                        overallGrade: '',
+                        overallAchievementLevel: ''
+                    };
+
+                    // Calculate marks for each subject
+                    Object.entries(SCHOOL_CONFIG.learningAreas).forEach(([code, name]) => {
+                        let finalMark = 0;
+                        
+                        if (analysisType === 'endterm') {
+                            const midtermKey = `${year}-${grade}-${term}-Midterm-${code}`;
+                            const endtermKey = `${year}-${grade}-${term}-Endterm-${code}`;
+                            
+                            const midtermMark = marks[midtermKey]?.marks[studentId] || 0;
+                            const endtermMark = marks[endtermKey]?.marks[studentId] || 0;
+                            
+                            if (midtermMark && endtermMark) {
+                                finalMark = (midtermMark + endtermMark) / 2;
+                            } else if (endtermMark) {
+                                finalMark = endtermMark;
+                            }
+                        } else {
+                            const midtermKey = `${year}-${grade}-${term}-Midterm-${code}`;
+                            finalMark = marks[midtermKey]?.marks[studentId] || 0;
+                        }
+
+                        if (finalMark > 0) {
+                            const performanceLevel = calculateGrade(finalMark);
+                            const achievementLevel = calculateAchievementLevel(finalMark);
+                            const points = getAchievementPoints(finalMark);
+
+                            studentData.subjects[code] = {
+                                name,
+                                mark: Math.round(finalMark * 10) / 10,
+                                performanceLevel,
+                                achievementLevel,
+                                points
+                            };
+
+                            studentData.totalMarks += finalMark;
+                            studentData.totalPoints += points;
+                            studentData.subjectCount++;
+                        }
+                    });
+
+                    if (studentData.subjectCount > 0) {
+                        studentData.averageMark = studentData.totalMarks / studentData.subjectCount;
+                        studentData.overallGrade = calculateGrade(studentData.averageMark);
+                        studentData.overallAchievementLevel = calculateAchievementLevel(studentData.averageMark);
+                        studentData.totalMarks = Math.round(studentData.totalMarks);
+                        studentData.averageMark = Math.round(studentData.averageMark * 10) / 10;
+                    }
+
+                    studentResults.push(studentData);
+                });
+
+                // Sort by total points (descending)
+                studentResults.sort((a, b) => b.totalPoints - a.totalPoints);
+
+                // Add rankings
+                studentResults.forEach((student, index) => {
+                    student.rank = index + 1;
+                });
+
+                // Generate analysis
+                const analysis = this.generateBroadsheetAnalysis(studentResults, {
+                    year,
+                    grade,
+                    term,
+                    analysisType
+                });
+
+                document.getElementById('broadsheetContent').innerHTML = analysis;
+                document.getElementById('broadsheetPreview').classList.remove('hidden');
+            }
+
+            generateBroadsheetAnalysis(studentResults, params) {
+                // Gender analysis
+                const genderAnalysis = this.analyzeByGender(studentResults);
+                
+                // Subject analysis
+                const subjectAnalysis = this.analyzeBySubject(studentResults);
+                
+                // Top and bottom performers
+                const topPerformers = studentResults.slice(0, 10);
+                const bottomPerformers = studentResults.slice(-10).reverse();
+
+                return `
+                    <div class="max-w-full mx-auto bg-white p-6 print:p-4" style="font-size: 11px;">
+                        <!-- Header -->
+                        <div class="text-center border-b-2 border-primary pb-4 mb-6">
+                            <div class="flex items-center justify-center mb-2">
+                                <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                                <div>
+                                    <h1 class="text-lg font-bold text-primary">${SCHOOL_CONFIG.name}</h1>
+                                    <p class="text-xs">${SCHOOL_CONFIG.address}</p>
+                                </div>
+                            </div>
+                            <h2 class="text-base font-bold mt-4">BROADSHEET ANALYSIS</h2>
+                            <p class="text-sm">Academic Year: ${params.year} | Grade: ${params.grade} | ${params.term} | ${params.analysisType === 'endterm' ? 'End Term Analysis' : 'Mid Term Analysis'}</p>
+                        </div>
+
+                        <!-- Student Results Table -->
+                        <div class="mb-8">
+                            <h3 class="text-sm font-bold mb-3">STUDENT PERFORMANCE SUMMARY</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full border-collapse border border-gray-400 text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-400 p-1">Rank</th>
+                                            <th class="border border-gray-400 p-1">S.I. No.</th>
+                                            <th class="border border-gray-400 p-1">Assessment No.</th>
+                                            <th class="border border-gray-400 p-1">Name</th>
+                                            <th class="border border-gray-400 p-1">Gender</th>
+                                            ${Object.entries(SCHOOL_CONFIG.learningAreas).map(([code, name]) => 
+                                                `<th class="border border-gray-400 p-1">${code}</th>`
+                                            ).join('')}
+                                            <th class="border border-gray-400 p-1">Total Marks</th>
+                                            <th class="border border-gray-400 p-1">Average</th>
+                                            <th class="border border-gray-400 p-1">Total Points</th>
+                                            <th class="border border-gray-400 p-1">Overall PL</th>
+                                            <th class="border border-gray-400 p-1">Overall AL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${studentResults.map(student => `
+                                            <tr>
+                                                <td class="border border-gray-400 p-1 text-center font-bold">${student.rank}</td>
+                                                <td class="border border-gray-400 p-1 text-center">${student.siNumber}</td>
+                                                <td class="border border-gray-400 p-1 text-center">${student.assessmentNumber}</td>
+                                                <td class="border border-gray-400 p-1">${student.name}</td>
+                                                <td class="border border-gray-400 p-1 text-center">${student.gender.charAt(0)}</td>
+                                                ${Object.keys(SCHOOL_CONFIG.learningAreas).map(code => {
+                                                    const subject = student.subjects[code];
+                                                    return `<td class="border border-gray-400 p-1 text-center">${subject ? `${subject.mark}(${subject.achievementLevel})` : '-'}</td>`;
+                                                }).join('')}
+                                                <td class="border border-gray-400 p-1 text-center">${student.totalMarks}</td>
+                                                <td class="border border-gray-400 p-1 text-center">${student.averageMark}</td>
+                                                <td class="border border-gray-400 p-1 text-center font-bold">${student.totalPoints}</td>
+                                                <td class="border border-gray-400 p-1 text-center">${student.overallGrade}</td>
+                                                <td class="border border-gray-400 p-1 text-center">${student.overallAchievementLevel}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Section -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- Gender Performance Analysis -->
+                            <div>
+                                <h3 class="text-sm font-bold mb-3">GENDER PERFORMANCE ANALYSIS</h3>
+                                <table class="w-full border-collapse border border-gray-400 text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-400 p-2">Gender</th>
+                                            <th class="border border-gray-400 p-2">EE</th>
+                                            <th class="border border-gray-400 p-2">ME</th>
+                                            <th class="border border-gray-400 p-2">AE</th>
+                                            <th class="border border-gray-400 p-2">BE</th>
+                                            <th class="border border-gray-400 p-2">Total</th>
+                                            <th class="border border-gray-400 p-2">Avg Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${Object.entries(genderAnalysis).map(([gender, data]) => `
+                                            <tr>
+                                                <td class="border border-gray-400 p-2 font-medium">${gender}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${data.EE}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${data.ME}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${data.AE}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${data.BE}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${data.total}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${data.avgPoints}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Subject Analysis -->
+                            <div>
+                                <h3 class="text-sm font-bold mb-3">LEARNING AREA RANKING</h3>
+                                <table class="w-full border-collapse border border-gray-400 text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-400 p-2">Rank</th>
+                                            <th class="border border-gray-400 p-2">Learning Area</th>
+                                            <th class="border border-gray-400 p-2">EE Count</th>
+                                            <th class="border border-gray-400 p-2">Mean Mark</th>
+                                            <th class="border border-gray-400 p-2">Mean Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${subjectAnalysis.map((subject, index) => `
+                                            <tr>
+                                                <td class="border border-gray-400 p-2 text-center font-bold">${index + 1}</td>
+                                                <td class="border border-gray-400 p-2">${subject.name}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${subject.eeCount}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${subject.meanMark}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${subject.meanPoints}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Top and Bottom Performers -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Top 10 Performers -->
+                            <div>
+                                <h3 class="text-sm font-bold mb-3">TOP 10 PERFORMERS</h3>
+                                <table class="w-full border-collapse border border-gray-400 text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-400 p-2">Rank</th>
+                                            <th class="border border-gray-400 p-2">Name</th>
+                                            <th class="border border-gray-400 p-2">Points</th>
+                                            <th class="border border-gray-400 p-2">Average</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${topPerformers.map(student => `
+                                            <tr>
+                                                <td class="border border-gray-400 p-2 text-center">${student.rank}</td>
+                                                <td class="border border-gray-400 p-2">${student.name}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${student.totalPoints}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${student.averageMark}%</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Bottom 10 Performers -->
+                            <div>
+                                <h3 class="text-sm font-bold mb-3">BOTTOM 10 PERFORMERS</h3>
+                                <table class="w-full border-collapse border border-gray-400 text-xs">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-400 p-2">Rank</th>
+                                            <th class="border border-gray-400 p-2">Name</th>
+                                            <th class="border border-gray-400 p-2">Points</th>
+                                            <th class="border border-gray-400 p-2">Average</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${bottomPerformers.map(student => `
+                                            <tr>
+                                                <td class="border border-gray-400 p-2 text-center">${student.rank}</td>
+                                                <td class="border border-gray-400 p-2">${student.name}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${student.totalPoints}</td>
+                                                <td class="border border-gray-400 p-2 text-center">${student.averageMark}%</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            analyzeByGender(studentResults) {
+                const analysis = {
+                    Male: { EE: 0, ME: 0, AE: 0, BE: 0, total: 0, totalPoints: 0, avgPoints: 0 },
+                    Female: { EE: 0, ME: 0, AE: 0, BE: 0, total: 0, totalPoints: 0, avgPoints: 0 }
+                };
+
+                studentResults.forEach(student => {
+                    const gender = student.gender;
+                    const grade = student.overallGrade;
+                    
+                    if (analysis[gender]) {
+                        analysis[gender][grade]++;
+                        analysis[gender].total++;
+                        analysis[gender].totalPoints += student.totalPoints;
+                    }
+                });
+
+                // Calculate average points
+                Object.keys(analysis).forEach(gender => {
+                    if (analysis[gender].total > 0) {
+                        analysis[gender].avgPoints = Math.round((analysis[gender].totalPoints / analysis[gender].total) * 10) / 10;
+                    }
+                });
+
+                return analysis;
+            }
+
+            analyzeBySubject(studentResults) {
+                const subjectData = {};
+
+                // Initialize subject data
+                Object.entries(SCHOOL_CONFIG.learningAreas).forEach(([code, name]) => {
+                    subjectData[code] = {
+                        name,
+                        totalMarks: 0,
+                        totalPoints: 0,
+                        studentCount: 0,
+                        eeCount: 0
+                    };
+                });
+
+                // Collect data
+                studentResults.forEach(student => {
+                    Object.entries(student.subjects).forEach(([code, subject]) => {
+                        if (subjectData[code]) {
+                            subjectData[code].totalMarks += subject.mark;
+                            subjectData[code].totalPoints += subject.points;
+                            subjectData[code].studentCount++;
+                            
+                            if (subject.performanceLevel === 'EE') {
+                                subjectData[code].eeCount++;
+                            }
+                        }
+                    });
+                });
+
+                // Calculate averages and sort
+                const analysis = Object.entries(subjectData).map(([code, data]) => ({
+                    code,
+                    name: data.name,
+                    eeCount: data.eeCount,
+                    meanMark: data.studentCount > 0 ? Math.round((data.totalMarks / data.studentCount) * 10) / 10 : 0,
+                    meanPoints: data.studentCount > 0 ? Math.round((data.totalPoints / data.studentCount) * 10) / 10 : 0
+                }));
+
+                // Sort by mean points (descending)
+                analysis.sort((a, b) => b.meanPoints - a.meanPoints);
+
+                return analysis;
+            }
+
+            hideBroadsheetPreview() {
+                document.getElementById('broadsheetPreview').classList.add('hidden');
+            }
+
+            showAnnouncements() {
+                const announcements = cloudStorage.get('announcements') || [];
+                
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Announcements</h1>
+                            </div>
+                            ${(currentUser.role === 'admin' || currentUser.role === 'teacher') ? `
+                                <button onclick="uiManager.showAddAnnouncementForm()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Post Announcement</button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    ${(currentUser.role === 'admin' || currentUser.role === 'teacher') ? `
+                        <div id="announcementForm" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Post New Announcement</h3>
+                            <form id="addAnnouncementForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                                    <input type="text" id="announcementTitle" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
+                                    <textarea id="announcementContent" rows="4" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Audience</label>
+                                    <select id="announcementAudience" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" required>
+                                        <option value="all">All Users</option>
+                                        <option value="teachers">Teachers Only</option>
+                                        <option value="parents">Parents Only</option>
+                                        <option value="students">Students Only</option>
+                                    </select>
+                                </div>
+                                <div class="flex space-x-4">
+                                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Post Announcement</button>
+                                    <button type="button" onclick="uiManager.hideAnnouncementForm()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    ` : ''}
+
+                    <div class="space-y-4">
+                        ${announcements.length > 0 ? announcements.map(announcement => `
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${announcement.title}</h3>
+                                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                                            By ${announcement.author} • ${new Date(announcement.date).toLocaleDateString()} • 
+                                            For: ${announcement.audience}
+                                        </p>
+                                    </div>
+                                    ${(currentUser.role === 'admin' || announcement.author === currentUser.name) ? `
+                                        <button onclick="uiManager.deleteAnnouncement('${announcement.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                                    ` : ''}
+                                </div>
+                                <div class="text-gray-700 dark:text-gray-300 mb-4">
+                                    ${announcement.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                                </div>
+                                
+                                <!-- Responses Section -->
+                                <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                                    <h4 class="font-semibold mb-2 text-gray-900 dark:text-white">Responses (${(announcement.responses || []).length})</h4>
+                                    
+                                    <!-- Add Response Form -->
+                                    <div class="mb-4">
+                                        <div class="flex space-x-2">
+                                            <input type="text" 
+                                                   placeholder="Write a response..." 
+                                                   class="flex-1 text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
+                                                   data-announcement-id="${announcement.id}">
+                                            <button onclick="uiManager.addResponse('${announcement.id}')" 
+                                                    class="bg-secondary text-white px-4 py-2 rounded hover:bg-blue-700">Reply</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Responses List -->
+                                    <div class="space-y-2">
+                                        ${(announcement.responses || []).map(response => `
+                                            <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <p class="text-sm font-medium text-gray-900 dark:text-white">${response.author}</p>
+                                                        <p class="text-sm text-gray-700 dark:text-gray-300">${response.content}</p>
+                                                        <p class="text-xs text-gray-500 dark:text-gray-400">${new Date(response.date).toLocaleString()}</p>
+                                                    </div>
+                                                    ${(currentUser.role === 'admin' || response.author === currentUser.name) ? `
+                                                        <button onclick="uiManager.deleteResponse('${announcement.id}', '${response.id}')" 
+                                                                class="text-red-600 hover:text-red-900 text-xs">Delete</button>
+                                                    ` : ''}
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') : `
+                            <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow text-center">
+                                <p class="text-gray-500 dark:text-gray-400">No announcements yet.</p>
+                            </div>
+                        `}
+                    </div>
+                `;
+
+                // Add form submit handler
+                if (document.getElementById('addAnnouncementForm')) {
+                    document.getElementById('addAnnouncementForm').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        await this.saveAnnouncement();
+                    });
+                }
+            }
+
+            showAddAnnouncementForm() {
+                document.getElementById('announcementForm').classList.remove('hidden');
+            }
+
+            hideAnnouncementForm() {
+                document.getElementById('announcementForm').classList.add('hidden');
+                document.getElementById('addAnnouncementForm').reset();
+            }
+
+            async saveAnnouncement() {
+                const title = document.getElementById('announcementTitle').value;
+                const content = document.getElementById('announcementContent').value;
+                const audience = document.getElementById('announcementAudience').value;
+
+                const announcement = {
+                    id: 'ANN' + Date.now(),
+                    title,
+                    content,
+                    audience,
+                    author: currentUser.name,
+                    date: new Date().toISOString(),
+                    responses: []
+                };
+
+                const announcements = cloudStorage.get('announcements') || [];
+                announcements.unshift(announcement);
+                await cloudStorage.save('announcements', announcements);
+
+                this.hideAnnouncementForm();
+                this.showAnnouncements();
+            }
+
+            async addResponse(announcementId) {
+                const input = document.querySelector(`[data-announcement-id="${announcementId}"]`);
+                const content = input.value.trim();
+
+                if (!content) return;
+
+                const response = {
+                    id: 'RESP' + Date.now(),
+                    content,
+                    author: currentUser.name,
+                    date: new Date().toISOString()
+                };
+
+                const announcements = cloudStorage.get('announcements') || [];
+                const announcementIndex = announcements.findIndex(a => a.id === announcementId);
+                
+                if (announcementIndex !== -1) {
+                    if (!announcements[announcementIndex].responses) {
+                        announcements[announcementIndex].responses = [];
+                    }
+                    announcements[announcementIndex].responses.push(response);
+                    await cloudStorage.save('announcements', announcements);
+                    
+                    input.value = '';
+                    this.showAnnouncements();
+                }
+            }
+
+            async deleteAnnouncement(id) {
+                if (confirm('Are you sure you want to delete this announcement?')) {
+                    const announcements = cloudStorage.get('announcements') || [];
+                    const filteredAnnouncements = announcements.filter(a => a.id !== id);
+                    await cloudStorage.save('announcements', filteredAnnouncements);
+                    this.showAnnouncements();
+                }
+            }
+
+            async deleteResponse(announcementId, responseId) {
+                if (confirm('Are you sure you want to delete this response?')) {
+                    const announcements = cloudStorage.get('announcements') || [];
+                    const announcementIndex = announcements.findIndex(a => a.id === announcementId);
+                    
+                    if (announcementIndex !== -1) {
+                        announcements[announcementIndex].responses = 
+                            announcements[announcementIndex].responses.filter(r => r.id !== responseId);
+                        await cloudStorage.save('announcements', announcements);
+                        this.showAnnouncements();
+                    }
+                }
+            }
+
+            showStudentResults() {
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Student Results</h1>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Search Student Results</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">S.I. Number</label>
+                                <input type="text" id="searchSiNumber" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white" placeholder="Enter S.I. Number">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                                <select id="searchYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === 2024 ? 'selected' : ''}>${year}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
+                                <select id="searchTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select Term</option>
+                                    ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}">${term}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam Type</label>
+                                <select id="searchExamType" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select Exam Type</option>
+                                    ${SCHOOL_CONFIG.examTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="uiManager.searchStudentResults()" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Search Results</button>
+                    </div>
+
+                    <div id="searchResults" class="hidden bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Student Performance</h3>
+                        <div id="studentResultsContent"></div>
+                    </div>
+                `;
+            }
+
+            async searchStudentResults() {
+                const siNumber = document.getElementById('searchSiNumber').value;
+                const year = document.getElementById('searchYear').value;
+                const term = document.getElementById('searchTerm').value;
+                const examType = document.getElementById('searchExamType').value;
+
+                if (!siNumber || !year || !term || !examType) {
+                    alert('Please fill in all search criteria');
+                    return;
+                }
+
+                const students = cloudStorage.get('students') || {};
+                const marks = cloudStorage.get('marks') || {};
+
+                // Find student by S.I. Number
+                const student = Object.values(students).find(s => s.siNumber === siNumber);
+                
+                if (!student) {
+                    alert('Student not found with the provided S.I. Number');
+                    return;
+                }
+
+                // Get student marks
+                const studentMarks = {};
+                Object.entries(SCHOOL_CONFIG.learningAreas).forEach(([code, name]) => {
+                    const marksKey = `${year}-${student.grade}-${term}-${examType}-${code}`;
+                    const mark = marks[marksKey]?.marks[Object.keys(students).find(id => students[id].siNumber === siNumber)];
+                    
+                    if (mark !== undefined) {
+                        studentMarks[code] = {
+                            name,
+                            mark,
+                            grade: calculateGrade(mark),
+                            achievementLevel: calculateAchievementLevel(mark),
+                            points: getAchievementPoints(mark)
+                        };
+                    }
+                });
+
+                if (Object.keys(studentMarks).length === 0) {
+                    alert('No results found for the specified criteria');
+                    return;
+                }
+
+                // Calculate totals
+                const totalMarks = Object.values(studentMarks).reduce((sum, m) => sum + m.mark, 0);
+                const averageMark = totalMarks / Object.keys(studentMarks).length;
+                const totalPoints = Object.values(studentMarks).reduce((sum, m) => sum + m.points, 0);
+
+                const resultsHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h4 class="font-semibold mb-2 text-gray-900 dark:text-white">Student Information</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-medium">S.I. Number:</td><td>${student.siNumber}</td></tr>
+                                <tr><td class="font-medium">Assessment Number:</td><td>${student.assessmentNumber}</td></tr>
+                                <tr><td class="font-medium">Name:</td><td>${student.name}</td></tr>
+                                <tr><td class="font-medium">Grade:</td><td>${student.grade}</td></tr>
+                                <tr><td class="font-medium">Gender:</td><td>${student.gender}</td></tr>
+                            </table>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-2 text-gray-900 dark:text-white">Exam Information</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-medium">Academic Year:</td><td>${year}</td></tr>
+                                <tr><td class="font-medium">Term:</td><td>${term}</td></tr>
+                                <tr><td class="font-medium">Exam Type:</td><td>${examType}</td></tr>
+                                <tr><td class="font-medium">Total Points:</td><td>${totalPoints}</td></tr>
+                                <tr><td class="font-medium">Average Mark:</td><td>${Math.round(averageMark * 10) / 10}%</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-gray-300 dark:border-gray-600">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-gray-700">
+                                    <th class="border border-gray-300 dark:border-gray-600 p-3 text-left">Learning Area</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 p-3 text-center">Mark (%)</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 p-3 text-center">Performance Level</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 p-3 text-center">Achievement Level</th>
+                                    <th class="border border-gray-300 dark:border-gray-600 p-3 text-center">Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(studentMarks).map(([code, mark]) => `
+                                    <tr>
+                                        <td class="border border-gray-300 dark:border-gray-600 p-3">${mark.name}</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 p-3 text-center">${mark.mark}</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 p-3 text-center">${mark.grade}</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 p-3 text-center">${mark.achievementLevel}</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 p-3 text-center">${mark.points}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                document.getElementById('studentResultsContent').innerHTML = resultsHTML;
+                document.getElementById('searchResults').classList.remove('hidden');
+            }
+
+            showSettings() {
+                const settings = cloudStorage.get('settings') || {};
+                
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/cec6b0e017338f4b6d1f618b2d3a272f3e2866933bee5a5f98fedf182c443a97?w=548&h=445" alt="School Logo" class="w-12 h-12 object-contain mr-4">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">System Settings</h1>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Academic Settings</h3>
+                        <form id="settingsForm" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Academic Year</label>
+                                    <select id="currentYear" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        ${SCHOOL_CONFIG.academicYears.map(year => `<option value="${year}" ${year === (settings.currentYear || 2024) ? 'selected' : ''}>${year}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Term</label>
+                                    <select id="currentTerm" class="w-full text-base px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white">
+                                        ${SCHOOL_CONFIG.terms.map(term => `<option value="${term}" ${term === (settings.currentTerm || 'Term 1') ? 'selected' : ''}>${term}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-red-700">Save Settings</button>
+                        </form>
+                    </div>
+
+                    <div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Data Management</h3>
+                        <div class="space-y-4">
+                            <button onclick="uiManager.exportData()" class="bg-secondary text-white px-4 py-2 rounded hover:bg-blue-700 mr-4">Export All Data</button>
+                            <button onclick="uiManager.clearAllData()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Clear All Data</button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.saveSettings();
+                });
+            }
+
+            async saveSettings() {
+                const currentYear = document.getElementById('currentYear').value;
+                const currentTerm = document.getElementById('currentTerm').value;
+
+                const settings = {
+                    currentYear: parseInt(currentYear),
+                    currentTerm,
+                    lastUpdated: new Date().toISOString()
+                };
+
+                await cloudStorage.save('settings', settings);
+                alert('Settings saved successfully!');
+            }
+
+            exportData() {
+                const data = {
+                    students: cloudStorage.get('students'),
+                    teachers: cloudStorage.get('teachers'),
+                    marks: cloudStorage.get('marks'),
+                    announcements: cloudStorage.get('announcements'),
+                    settings: cloudStorage.get('settings'),
+                    exportDate: new Date().toISOString()
+                };
+
+                const dataStr = JSON.stringify(data, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `saks_data_backup_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+
+            async clearAllData() {
+                if (confirm('Are you sure you want to clear ALL data? This action cannot be undone!')) {
+                    if (confirm('This will delete all students, teachers, marks, and announcements. Type "DELETE" to confirm:') && 
+                        prompt('Type DELETE to confirm:') === 'DELETE') {
+                        
+                        // Clear all data except users
+                        await cloudStorage.save('students', {});
+                        await cloudStorage.save('teachers', {});
+                        await cloudStorage.save('marks', {});
+                        await cloudStorage.save('announcements', []);
+                        
+                        alert('All data has been cleared!');
+                        this.showDashboard();
+                    }
+                }
+            }
+        }
+
+        // Initialize UI Manager
+        const uiManager = new UIManager();
+
+        // Event Handlers
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Show loading screen
+            uiManager.showLoading();
+
+            // Initialize cloud storage (simulate loading from cloud)
+            await cloudStorage.loadFromCloud();
+
+            // Show login screen after loading
+            setTimeout(() => {
+                uiManager.showLogin();
+            }, 2000);
+
+            // Login form handler
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const userType = document.getElementById('userType').value;
+
+                const result = await authSystem.login(username, password, userType);
+                
+                if (result.success) {
+                    uiManager.showMainApp();
+                } else {
+                    alert(result.message || 'Invalid credentials');
+                }
+            });
+
+            // Logout handler
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    authSystem.logout();
+                    uiManager.showLogin();
+                }
+            });
+
+            // Password reset handlers
+            document.getElementById('resetPasswordLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('resetModal').classList.remove('hidden');
+            });
+
+            document.getElementById('cancelReset').addEventListener('click', () => {
+                document.getElementById('resetModal').classList.add('hidden');
+            });
+
+            document.getElementById('resetForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('resetEmail').value;
+                const result = await authSystem.resetPassword(email);
+                alert(result.message);
+                document.getElementById('resetModal').classList.add('hidden');
+            });
+        });
+    </script>
+
+<!-- Firebase App (core) -->
+<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
+  import { getFirestore, setDoc, getDoc, doc } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "your-project-id.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project-id.appspot.com",
+    messagingSenderId: "XXXXXXX",
+    appId: "APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function saveToCloud(data) {
+    await setDoc(doc(db, "schoolData", "global"), data);
+    console.log("Data saved to Firestore");
+  }
+
+  async function loadFromCloud() {
+    const docSnap = await getDoc(doc(db, "schoolData", "global"));
+    if (docSnap.exists()) {
+      console.log("Data loaded from Firestore");
+      return docSnap.data();
+    } else {
+      console.log("No cloud data found, initializing...");
+      return {};
+    }
+  }
+
+  cloudStorage.saveToCloud = async function () {
+    await saveToCloud(this.data);
+  }
+
+  cloudStorage.loadFromCloud = async function () {
+    this.data = await loadFromCloud();
+    return this.data;
+  }
+</script>
+
+</body>
+</html>
